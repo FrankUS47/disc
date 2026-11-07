@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#12121a">
+  <title>3D 自訂骰子擬真模擬器</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1>🎲 3D 骰子模擬器</h1>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" title="骰子聲音" aria-label="骰子聲音">🔇</button>
+        <button class="icon-btn" id="settingsBtn" title="設定" aria-label="設定">⚙️</button>
+      </div>
+    </header>
+
+    <main class="stage" id="stage">
+      <canvas id="gl"></canvas>
+      <div class="hint" id="hint">按住並晃動滑鼠／手機　越快越猛</div>
+      <div class="status" id="status"></div>
+    </main>
+
+    <footer class="dock">
+      <div class="result">
+        <div class="result-text" id="resultText">準備擲骰…</div>
+        <div class="result-note" id="resultNote"></div>
+      </div>
+      <div class="buttons">
+        <button class="btn" id="openBtn" hidden>開盅</button>
+        <button class="btn primary" id="rollBtn">擲骰子</button>
+      </div>
+    </footer>
+
+    <!-- 設定面板 (浮層，不佔用主畫面) -->
+    <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+    <aside class="sheet" id="sheet" hidden>
+      <div class="sheet-head">
+        <h2>⚙️ 設定</h2>
+        <button class="icon-btn" id="sheetClose" aria-label="關閉">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="row">
+          <label>骰子數量</label>
+          <div class="seg" id="countSeg">
+            <button data-v="1" class="on">1</button><button data-v="2">2</button>
+            <button data-v="3">3</button><button data-v="4">4</button>
+          </div>
+        </div>
+        <div class="row">
+          <label for="faceCount">骰子面數 (2~20)</label>
+          <div class="stepper">
+            <button id="faceMinus">−</button>
+            <input type="number" id="faceCount" min="2" max="20" value="6" inputmode="numeric">
+            <button id="facePlus">＋</button>
+          </div>
+        </div>
+        <label class="switch-row"><span>🥤 黑色骰盅模式 (看不到骰子，停止後才開盅)</span><input type="checkbox" id="cupToggle"></label>
+        <label class="switch-row"><span>🫧 透明骰盅 (可看到盅內骰子狀況)</span><input type="checkbox" id="clearToggle"></label>
+        <label class="switch-row"><span>🔊 骰子滾動聲音</span><input type="checkbox" id="soundToggle"></label>
+        <label class="switch-row"><span>🎩 特技模式 (高速晃動可能疊骰／粉碎)</span><input type="checkbox" id="tricksToggle" checked></label>
+        <button class="btn secondary" id="motionBtn" hidden>啟用手機搖晃感應</button>
+
+        <div class="row col">
+          <label>各面自訂代表意義</label>
+          <div class="face-inputs" id="faceInputs"></div>
+        </div>
+        <div class="row col">
+          <label>投擲紀錄</label>
+          <div class="history" id="historyList"><span class="muted">尚無紀錄</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script src="js/lib/three.min.js"></script>
+  <script src="js/lib/cannon.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/textures.js"></script>
+  <script src="js/dice-mesh.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/scene.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
