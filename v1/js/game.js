@@ -50,6 +50,7 @@
       s.faces = clamp(s.faces | 0 || 6, 2, 20);
       this.ensureMeanings();
       P.buildContainer(s.cup ? CFG.PHYS_R_CUP : CFG.PHYS_R_OPEN, s.cup ? CFG.CEIL_CUP : CFG.CEIL_OPEN);
+      CFG.MAX_OFFSET = s.cup ? CFG.MAX_OFFSET_CUP : CFG.OFFSET_BASE;
       S.setCupMode(s.cup);
       S.setClear(s.clear);
       this.hold = 0;
@@ -138,7 +139,7 @@
     },
 
     beginThrow() {
-      this.peak = 0; this.sustain = 0; this.maxSustain = 0; this.idleT = 0; this.tiltRetries = 0; this.slowT = 0; this.last = null;
+      this.revealed = false; this.peak = 0; this.sustain = 0; this.maxSustain = 0; this.idleT = 0; this.tiltRetries = 0; this.slowT = 0; this.last = null;
       this.emit('result', { text: '搖骰中…', note: '', pending: true });
       if (this.settings.cup && this.lift > 0) {
         this.liftTarget = 0;
@@ -212,8 +213,8 @@
         this.maxSustain = Math.max(this.maxSustain, this.sustain);
 
         if (!this.auto && !(I.hold && I.power >= CFG.STOP_POWER)) this.idleT += dt; else this.idleT = 0;
-        if (this.idleT > 0.25) { this.setState('settling'); this.settleT = 0; this.slowT = 0; }
-        else if (s.tricks) this.hazards(dt, power);
+        if (this.idleT > (I.active ? 0.5 : 0.3)) { this.setState('settling'); this.settleT = 0; this.slowT = 0; }
+        else if (s.tricks && s.cup) this.hazards(dt, power);
       } else if (this.state === 'settling') {
         if (I.active) { gx = I.offX; gz = I.offZ; }
         if (I.hold && I.power > CFG.START_POWER) { this.setState('shaking'); this.idleT = 0; this.hold = cp.y; P.wakeAll(); }
@@ -242,13 +243,31 @@
         if ((this.slowT > 0.35 && near && this.settleT > 0.5) || this.settleT > 9) this.finishThrow();
       }
 
+      this.updateSound(dt);
       S.update(dt, P.cont, this.lift, s.cup);
       S.render();
     },
 
+    /* 滾動底噪 (依骰子速度) 與落地聲 */
+    updateSound(dt) {
+      const cp = P.cont.pos;
+      if (this.wasHeld && cp.y < 0.03 && this.settings.cup) { A.land(); this.wasHeld = false; }
+      if (cp.y > 0.6) this.wasHeld = true;
+      if (!A.enabled) return;
+      let m = 0;
+      const bodies = P.world.bodies;
+      for (let i = 0; i < bodies.length; i++) {
+        const b = bodies[i];
+        if (b.type !== C.Body.DYNAMIC || b.position.y - cp.y > 0.9) continue;
+        const rv = Math.hypot(b.velocity.x - P.cont.v.x, b.velocity.z - P.cont.v.z);
+        if (rv > m) m = rv;
+      }
+      A.setRoll(this.state === 'idle' ? 0 : Math.min(1, m / 9), this.settings.cup && this.lift < 0.5);
+    },
+
     /* 速度過快：骰子出現裂痕、甚至粉碎 */
     hazards(dt, power) {
-      if (power <= CFG.CHIP_POWER || this.sustain < CFG.CHIP_SUSTAIN) return;
+      if (!this.settings.cup || power <= CFG.CHIP_POWER || this.sustain < CFG.CHIP_SUSTAIN) return;
       this.alive().forEach(d => {
         if (power > CFG.SHATTER_POWER && this.sustain >= CFG.SHATTER_SUSTAIN && rand() < (power - CFG.SHATTER_POWER) * CFG.SHATTER_RATE * dt) {
           FX.shatter(d); this.needReset = true; return;
@@ -326,7 +345,8 @@
     },
 
     reveal() {
-      if (!this.last) return;
+      if (!this.last || this.revealed) return;
+      this.revealed = true;
       const t = new Date().toLocaleTimeString();
       this.history.unshift(`[${t}] ${this.last.text}${this.last.note ? '　' + this.last.note : ''}`);
       if (this.history.length > 30) this.history.length = 30;

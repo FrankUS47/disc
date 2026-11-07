@@ -87,7 +87,7 @@
       this.cupMode = on;
       this.cup.visible = on;
       this.tray.position.set(0, 0, 0);
-      this.wantR = on ? 5.7 : 4.4;
+      this.wantR = on ? 6.3 : 4.4;
       this.wantCy = on ? 3.0 : 0.7;
     },
 

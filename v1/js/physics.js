@@ -53,7 +53,7 @@
         const r = apothem + hz;
         mk(half, CFG.WALL_H / 2, hz, Math.sin(th) * r, CFG.WALL_H / 2 - 0.5, Math.cos(th) * r, th, 'wall');
       }
-      this.cont = { R, pos: { x: 0, y: 0, z: 0 }, bodies };
+      this.cont = { R, ceil: ceilY, pos: { x: 0, y: 0, z: 0 }, v: { x: 0, y: 0, z: 0 }, bodies };
     },
 
     _hook(body) {
@@ -102,13 +102,21 @@
       this.world.bodies.forEach(b => { if (b.type === C.Body.DYNAMIC) b.wakeUp(); });
     },
 
-    /* 讓容器朝 goal 移動 (速度上限 maxSpeed)，並做子步驟積分避免穿透 */
+    /* 讓容器朝 goal 移動 (速度、加速度皆有上限，像真人的手)，並做子步驟積分避免穿透 */
     step(dt, goal, maxSpeed) {
       const c = this.cont;
-      let vx = (goal.x - c.pos.x) / dt, vy = (goal.y - c.pos.y) / dt, vz = (goal.z - c.pos.z) / dt;
-      const sp = Math.hypot(vx, vy, vz);
-      if (sp > maxSpeed) { const k = maxSpeed / sp; vx *= k; vy *= k; vz *= k; }
-      const n = Math.max(1, Math.ceil(dt / (1 / 120)));
+      if (!c.v) c.v = { x: 0, y: 0, z: 0 };
+      let dx = (goal.x - c.pos.x) / dt, dy = (goal.y - c.pos.y) / dt, dz = (goal.z - c.pos.z) / dt;
+      const sp = Math.hypot(dx, dy, dz);
+      if (sp > maxSpeed) { const k = maxSpeed / sp; dx *= k; dy *= k; dz *= k; }
+      // 加速度限制：避免一幀內速度突變，骰子撞穿牆
+      let ax = dx - c.v.x, ay = dy - c.v.y, az = dz - c.v.z;
+      const am = Math.hypot(ax, ay, az), amax = CFG.MAX_ACC * dt;
+      if (am > amax) { const k = amax / am; ax *= k; ay *= k; az *= k; }
+      const vx = c.v.x + ax, vy = c.v.y + ay, vz = c.v.z + az;
+      c.v.x = vx; c.v.y = vy; c.v.z = vz;
+
+      const n = Math.max(1, Math.ceil(dt / (1 / 180)));
       const h = dt / n;
       const bodies = this.world.bodies;
       for (let s = 0; s < n; s++) {
@@ -124,9 +132,30 @@
           if (b.type !== C.Body.DYNAMIC) continue;
           const v = b.velocity, l2 = v.x * v.x + v.y * v.y + v.z * v.z;
           if (l2 > CFG.MAX_BODY_V * CFG.MAX_BODY_V) v.scale(CFG.MAX_BODY_V / Math.sqrt(l2), v);
+          this._contain(b, c, vx, vy, vz);
         }
       }
       c.vel = { x: vx, y: vy, z: vz };
+    },
+
+    /* 最後防線：骰子/碎片永遠不可能離開容器 (圓牆內、地板上、天花板下) */
+    _contain(b, c, vx, vy, vz) {
+      const shard = b.userData && b.userData.kind === 'shard';
+      const p = b.position, v = b.velocity;
+      if (!isFinite(p.x + p.y + p.z)) {            // 數值爆掉：放回容器中央
+        p.set(c.pos.x, c.pos.y + 0.6, c.pos.z); v.set(vx, vy, vz); b.angularVelocity.set(0, 0, 0); return;
+      }
+      const m = shard ? 0.1 : 0.34;
+      const rx = p.x - c.pos.x, rz = p.z - c.pos.z, d = Math.hypot(rx, rz), lim = c.R - m;
+      if (d > lim) {
+        const nx = rx / d, nz = rz / d;
+        p.x = c.pos.x + nx * lim; p.z = c.pos.z + nz * lim;
+        const vn = (v.x - vx) * nx + (v.z - vz) * nz;
+        if (vn > 0) { v.x -= 1.3 * vn * nx; v.z -= 1.3 * vn * nz; }
+      }
+      const lo = c.pos.y + (shard ? 0.03 : 0.3), hi = c.pos.y + c.ceil - (shard ? 0.03 : 0.34);
+      if (p.y < lo) { p.y = lo; if (v.y < vy) v.y = vy; }
+      else if (p.y > hi) { p.y = hi; if (v.y > vy) v.y = vy - 0.5; }
     },
 
     /* 所有動態剛體是否都已幾乎靜止 */

@@ -22,7 +22,7 @@
         sound: $('soundBtn'), settings: $('settingsBtn'),
         sheet: $('sheet'), backdrop: $('sheetBackdrop'), close: $('sheetClose'),
         countSeg: $('countSeg'), faces: $('faceCount'), minus: $('faceMinus'), plus: $('facePlus'),
-        cup: $('cupToggle'), clear: $('clearToggle'), soundT: $('soundToggle'), tricks: $('tricksToggle'),
+        cup: $('cupToggle'), sStyle: $('soundStyle'), sTest: $('soundTest'), clear: $('clearToggle'), soundT: $('soundToggle'), tricks: $('tricksToggle'),
         inputs: $('faceInputs'), history: $('historyList'), motion: $('motionBtn')
       };
 
@@ -52,6 +52,10 @@
 
       /* 開關 */
       el.cup.addEventListener('change', () => G.applySettings({ cup: el.cup.checked }));
+      Object.keys(A.STYLES).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = A.STYLES[k].label; el.sStyle.appendChild(o); });
+      el.sStyle.value = A.style;
+      el.sStyle.addEventListener('change', () => { A.setStyle(el.sStyle.value); A.preview(el.sStyle.value); });
+      el.sTest.addEventListener('click', () => { A.init(); A.preview(el.sStyle.value); });
       el.clear.addEventListener('change', () => G.applySettings({ clear: el.clear.checked }));
       el.tricks.addEventListener('change', () => { G.settings.tricks = el.tricks.checked; });
       const setSound = (on) => {

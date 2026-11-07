@@ -60,7 +60,11 @@
         <label class="switch-row"><span>🥤 黑色骰盅模式 (看不到骰子，停止後才開盅)</span><input type="checkbox" id="cupToggle"></label>
         <label class="switch-row"><span>🫧 透明骰盅 (可看到盅內骰子狀況)</span><input type="checkbox" id="clearToggle"></label>
         <label class="switch-row"><span>🔊 骰子滾動聲音</span><input type="checkbox" id="soundToggle"></label>
-        <label class="switch-row"><span>🎩 特技模式 (高速晃動可能疊骰／粉碎)</span><input type="checkbox" id="tricksToggle" checked></label>
+        <div class="row">
+          <label for="soundStyle">🔊 音色</label>
+          <div class="stepper"><select id="soundStyle"></select><button id="soundTest" title="試聽" style="width:auto;padding:0 12px">試聽</button></div>
+        </div>
+        <label class="switch-row"><span>🎩 特技模式 (僅骰盅：極快且持續搖晃才可能疊骰／粉碎)</span><input type="checkbox" id="tricksToggle" checked></label>
         <button class="btn secondary" id="motionBtn" hidden>啟用手機搖晃感應</button>
 
         <div class="row col">

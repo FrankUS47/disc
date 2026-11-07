@@ -18,7 +18,9 @@
     GRAVITY: -34,
     MAX_V: 26,          // 容器(托盤/骰盅)最大移動速度 u/s
     MAX_BODY_V: 40,     // 單一剛體最大速度
-    MAX_OFFSET: 1.6,    // 容器離中心最大位移
+    MAX_OFFSET: 1.6,    // 容器離中心最大位移 (骰盅模式會放大到 MAX_OFFSET_CUP)
+    MAX_OFFSET_CUP: 2.4,
+    MAX_ACC: 1400,      // 容器最大加速度 u/s²    // 容器離中心最大位移
     RETURN_V: 2.5,      // 放開後容器回中心速度
 
     // ---- 力道換算 (power) ----
@@ -27,7 +29,8 @@
     START_POWER: 1.2,       // 超過就視為開始搖骰
     STOP_POWER: 0.7,        // 低於就視為停止搖動
 
-    // ---- 特技 ----
+    OFFSET_BASE: 1.6,
+    // ---- 特技 (僅限骰盅模式) ----
     // 特技必須「非常快 + 持續很久」：力道 >= SUSTAIN_POWER 的累積秒數(sustain)夠長才有機會，且機率很低
     SUSTAIN_POWER: 12,      // 超過這個力道才累積 sustain (滑鼠約 3600 px/s)
     STACK_SUSTAIN: 3.5,     // 疊骰：需累積秒數
